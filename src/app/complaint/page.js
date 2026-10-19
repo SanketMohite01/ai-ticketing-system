@@ -38,6 +38,7 @@ export default function ComplaintPage() {
       setForm({
         customerName: "",
         customerEmail: "",
+        customerPhone: "",
         subject: "",
         description: "",
       });

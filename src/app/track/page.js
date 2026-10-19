@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 const STATUS_BADGE = {
@@ -14,11 +14,40 @@ export default function TrackPage() {
   const [lookup, setLookup] = useState({ ticketId: "", email: "" });
   const [autoLookupDone, setAutoLookupDone] = useState(false);
 
+  const [ticket, setTicket] = useState(null);
+  const [notes, setNotes] = useState([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const [replyText, setReplyText] = useState("");
   const [replySaving, setReplySaving] = useState(false);
   const [phone, setPhone] = useState("");
   const [humanRequested, setHumanRequested] = useState(false);
   const [humanSaving, setHumanSaving] = useState(false);
+
+  async function handleLookup(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setTicket(null);
+
+    try {
+      const res = await fetch("/api/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(lookup),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setTicket(data.ticket);
+      setNotes(data.notes);
+      setHumanRequested(data.ticket.needsHuman);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     const ticketId = searchParams.get("ticketId");
@@ -35,6 +64,7 @@ export default function TrackPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoLookupDone]);
+
   async function handleReply(e) {
     e.preventDefault();
     if (!replyText.trim()) return;

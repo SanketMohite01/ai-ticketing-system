@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
 import { getTicketForCustomer, listNotes } from "@/db/queries";
 import { trackLookupSchema, validateBody } from "@/lib/validation";
+import { trackLimiter, getClientIp } from "@/lib/ratelimit";
 
 export async function POST(request) {
+  const ip = getClientIp(request);
+  const { success } = await trackLimiter.limit(ip);
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429 },
+    );
+  }
+
   const body = await request.json();
   const { data, error } = validateBody(trackLookupSchema, body);
   if (error) {
