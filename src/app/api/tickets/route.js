@@ -1,19 +1,17 @@
 import { NextResponse } from "next/server";
 import { createTicket, updateTicketAiFields, listTickets } from "@/db/queries";
 import { analyzeTicket } from "@/lib/ai";
+import { createTicketSchema, validateBody } from "@/lib/validation";
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { customerName, customerEmail, customerPhone, subject, description } =
-      body;
-
-    if (!customerName || !customerEmail || !subject || !description) {
-      return NextResponse.json(
-        { error: "All fields are required" },
-        { status: 400 },
-      );
+    const { data, error } = validateBody(createTicketSchema, body);
+    if (error) {
+      return NextResponse.json({ error }, { status: 400 });
     }
+    const { customerName, customerEmail, customerPhone, subject, description } =
+      data;
 
     // 1. Save the ticket immediately so we never lose a complaint, even if AI analysis fails
     const ticket = await createTicket({
@@ -23,7 +21,7 @@ export async function POST(request) {
       subject,
       description,
     });
-
+    // ... rest of the function stays exactly the same
     // 2. Ask Gemini to analyze it
     const analysis = await analyzeTicket({ subject, description });
 

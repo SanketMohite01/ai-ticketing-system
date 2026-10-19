@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const STATUS_BADGE = {
   Open: "bg-blue-100 text-blue-800",
@@ -9,11 +10,9 @@ const STATUS_BADGE = {
 };
 
 export default function TrackPage() {
+  const searchParams = useSearchParams();
   const [lookup, setLookup] = useState({ ticketId: "", email: "" });
-  const [ticket, setTicket] = useState(null);
-  const [notes, setNotes] = useState([]);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [autoLookupDone, setAutoLookupDone] = useState(false);
 
   const [replyText, setReplyText] = useState("");
   const [replySaving, setReplySaving] = useState(false);
@@ -21,30 +20,21 @@ export default function TrackPage() {
   const [humanRequested, setHumanRequested] = useState(false);
   const [humanSaving, setHumanSaving] = useState(false);
 
-  async function handleLookup(e) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setTicket(null);
-
-    try {
-      const res = await fetch("/api/track", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(lookup),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setTicket(data.ticket);
-      setNotes(data.notes);
-      setHumanRequested(data.ticket.needsHuman);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    const ticketId = searchParams.get("ticketId");
+    const email = searchParams.get("email");
+    if (ticketId && email && !autoLookupDone) {
+      setLookup({ ticketId, email });
+      setAutoLookupDone(true);
     }
-  }
+  }, [searchParams, autoLookupDone]);
 
+  useEffect(() => {
+    if (autoLookupDone && lookup.ticketId && lookup.email) {
+      handleLookup({ preventDefault: () => {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoLookupDone]);
   async function handleReply(e) {
     e.preventDefault();
     if (!replyText.trim()) return;

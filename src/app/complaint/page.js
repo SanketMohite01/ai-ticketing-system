@@ -74,6 +74,12 @@ export default function ComplaintPage() {
                 A member of our team will follow up with you shortly.
               </p>
             )}
+            <a
+              href={`/track?ticketId=${encodeURIComponent(result.ticketId)}&email=${encodeURIComponent(result.customerEmail)}`}
+              className="inline-block mt-3 text-sm text-indigo-600 hover:underline font-medium"
+            >
+              Reply or check status &rarr;
+            </a>
           </div>
         )}
         {error && (
