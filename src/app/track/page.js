@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 const STATUS_BADGE = {
@@ -9,7 +9,7 @@ const STATUS_BADGE = {
   Closed: "bg-gray-200 text-gray-700",
 };
 
-export default function TrackPage() {
+function TrackPageInner() {
   const searchParams = useSearchParams();
   const [lookup, setLookup] = useState({ ticketId: "", email: "" });
   const [autoLookupDone, setAutoLookupDone] = useState(false);
@@ -263,5 +263,19 @@ export default function TrackPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function TrackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <TrackPageInner />
+    </Suspense>
   );
 }
